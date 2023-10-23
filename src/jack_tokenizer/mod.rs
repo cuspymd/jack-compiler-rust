@@ -1,17 +1,49 @@
 pub mod token;
 use regex::Regex;
 
+use self::token::{Token, TokenType};
 
-pub struct JackTokenizer {
-    lines: Vec<String>,
-    current_line_number: i32,    
+
+pub struct JackTokenizer<'a> {
+    tokens: Vec<Token<'a>>,
+    current_token_number: i32,
+    is_start: bool,
 }
 
-impl JackTokenizer {
+impl<'a> JackTokenizer<'a> {
     pub fn new(file_text: &str) -> JackTokenizer {
         JackTokenizer {
-            lines: JackTokenizer::get_valid_lines(file_text),
-            current_line_number: -1,
+            tokens: JackTokenizer::parse_tokens(file_text),
+            current_token_number: -1,
+            is_start: false,
+        }
+    }
+
+    fn parse_tokens(file_text: &str) -> Vec<Token<'a>> {
+        let lines = JackTokenizer::get_valid_lines(file_text);
+        let symbols = vec![
+            '{', '}', '(', ')', '[', ']', '.', ',', ';',
+            '+', '-', '*', '/', '&', '|', '<', '>', '=', '~'
+        ];
+        let mut tokens = Vec::new();
+
+        for line in lines {
+            let mut token_type = TokenType::Unknown;
+            let mut token_start_index = 0;
+
+            for ch in line.chars() {
+                if symbols.contains(&ch) {
+                    if token_type != TokenType::Unknown {
+
+                    }
+                } else if ch == ' ' {
+                    
+                } else if ch == '"' {
+                    
+                } else {
+                    
+                }
+            }
         }
     }
 
