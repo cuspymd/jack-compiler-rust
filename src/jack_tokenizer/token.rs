@@ -1,6 +1,8 @@
 use std::collections::HashMap;
+use lazy_static::lazy_static;
 
-#[derive(PartialEq)]
+
+#[derive(PartialEq, Debug)]
 pub enum TokenType {
     Unknown,
     Keyword,
@@ -35,41 +37,44 @@ pub enum KeywordType {
     This,
 }
 
-pub struct Token<'a> {
+pub struct Token {
     token_type: TokenType,
     text: String,
-    str_to_keyword_map: HashMap<&'a str, KeywordType>,
-    keyword_to_str_map: HashMap<KeywordType, &'a str>,
 }
 
-impl<'a> Token<'a> {
-    pub fn new(token_type: TokenType, token_text: String) -> Token<'a> {
-        let str_to_keyword_map = Token::create_str_to_keyword_map();
-        let keyword_to_str_map = Token::create_keyword_to_str_map();
+impl Token {
+    pub fn new(token_type: TokenType, token_text: &str) -> Token {
         let mut _token_type = token_type;
 
         if let TokenType::Identifier = _token_type {
-            if str_to_keyword_map.contains_key(&token_text as &str) {
+            if STR_TO_KEYWORD_MAP.contains_key(token_text) {
                 _token_type = TokenType::Keyword;
-            } else if Token::is_numeric(&token_text) {
+            } else if Token::is_numeric(token_text) {
                 _token_type = TokenType::IntConst;
             }
         }
 
         Token {
             token_type: _token_type,
-            text: token_text,
-            str_to_keyword_map,
-            keyword_to_str_map,
+            text: token_text.to_string(),
         }
-
     }
 
     fn is_numeric(text: &str) -> bool {
         text.parse::<u16>().is_ok()
     }
 
-    fn create_str_to_keyword_map() -> HashMap<&'a str, KeywordType> {
+    pub fn get_type(&self) -> &TokenType {
+        &self.token_type
+    }
+    
+    pub fn get_text(&self) -> &str {
+        &self.text
+    }
+}
+
+lazy_static! {
+    pub static ref STR_TO_KEYWORD_MAP: HashMap<&'static str, KeywordType> = {
         let mut map = HashMap::new();
         map.insert("class", KeywordType::Class);
         map.insert("constructor", KeywordType::Constructor);
@@ -93,9 +98,9 @@ impl<'a> Token<'a> {
         map.insert("while", KeywordType::While);
         map.insert("return", KeywordType::Return);
         map
-    }
+    };
 
-    fn create_keyword_to_str_map() -> HashMap<KeywordType, &'a str> {
+    pub static ref KEYWORD_TO_STR_MAP: HashMap<KeywordType, &'static str> = {
         let mut map = HashMap::new();
         map.insert(KeywordType::Class, "class");
         map.insert(KeywordType::Constructor, "constructor");
@@ -119,5 +124,6 @@ impl<'a> Token<'a> {
         map.insert(KeywordType::While, "while");
         map.insert(KeywordType::Return, "return");
         map
-    }
+    };
 }
+
