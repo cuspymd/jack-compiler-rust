@@ -12,7 +12,7 @@ pub enum TokenType {
     Identifier,
 }
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub enum KeywordType {
     Class,
     Method,

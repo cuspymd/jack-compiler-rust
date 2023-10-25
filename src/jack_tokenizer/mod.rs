@@ -1,7 +1,7 @@
 pub mod token;
 use regex::Regex;
 
-use self::token::{Token, TokenType};
+use self::token::{Token, TokenType, KeywordType, STR_TO_KEYWORD_MAP};
 
 
 pub struct JackTokenizer {
@@ -52,7 +52,7 @@ impl JackTokenizer {
                         token_type = TokenType::StringConst;
                         token_start_index = i;
                     } else {
-                        tokens.push(Token::new(token_type, &line[token_start_index..i]));
+                        tokens.push(Token::new(token_type, &line[token_start_index+1..i]));
                         token_type = TokenType::Unknown;
                     }
                 } else {
@@ -97,6 +97,28 @@ impl JackTokenizer {
 
     pub fn token_type(&self) -> &TokenType {
         self.tokens[self.current_token_number as usize].get_type()
+    }
+
+    pub fn keyword(&self) -> &KeywordType {
+        let token_text = self.tokens[self.current_token_number as usize].get_text();
+        &STR_TO_KEYWORD_MAP[token_text]
+    }
+
+    pub fn symbol(&self) -> &str {
+        self.tokens[self.current_token_number as usize].get_text()
+    }
+
+    pub fn identifier(&self) -> &str {
+        self.tokens[self.current_token_number as usize].get_text()
+    }
+
+    pub fn int_val(&self) -> u16 {
+        let text = self.tokens[self.current_token_number as usize].get_text();
+        text.parse::<u16>().unwrap()
+    }
+
+    pub fn string_val(&self) -> &str {
+        self.tokens[self.current_token_number as usize].get_text()
     }
 }
 
@@ -205,5 +227,78 @@ mod tests {
             tokenizer.advance();
             assert_eq!(&TokenType::Keyword, tokenizer.token_type());
         }
+    }
+
+    #[test]
+    fn test_token_type_given_symbol() {
+        let symbol_text = "{}()[].,;+-*/&|<>=~";
+
+        for symbol in symbol_text.chars() {
+            let mut tokenizer = JackTokenizer::new(&symbol.to_string());
+            tokenizer.advance();
+            assert_eq!(&TokenType::Symbol, tokenizer.token_type());
+        }
+    }
+
+    #[test]
+    fn test_token_type_given_identifier() {
+        let mut tokenizer = JackTokenizer::new("name");
+        tokenizer.advance();
+        assert_eq!(&TokenType::Identifier, tokenizer.token_type());
+    }
+
+    #[test]
+    fn test_token_type_given_integer_constant() {
+        let mut tokenizer = JackTokenizer::new("123");
+        tokenizer.advance();
+        assert_eq!(&TokenType::IntConst, tokenizer.token_type());
+    }
+
+    #[test]
+    fn test_token_type_given_string_constant() {
+        let mut tokenizer = JackTokenizer::new("\"test string\"");
+        tokenizer.advance();
+        assert_eq!(&TokenType::StringConst, tokenizer.token_type());
+    }
+
+    #[test]
+    fn test_keyword_given_keyword() {
+        for (&keyword_text, keyword_type) in STR_TO_KEYWORD_MAP.iter() {
+            let mut tokenizer = JackTokenizer::new(keyword_text);
+            tokenizer.advance();
+            assert_eq!(keyword_type, tokenizer.keyword());
+        }
+    }
+
+    #[test]
+    fn test_symbol_given_symbol() {
+        let symbol_text = "{}()[].,;+-*/&|<>=~";
+
+        for symbol in symbol_text.chars() {
+            let mut tokenizer = JackTokenizer::new(&symbol.to_string());
+            tokenizer.advance();
+            assert_eq!(&symbol.to_string(), tokenizer.symbol());
+        }
+    }
+
+    #[test]
+    fn test_identifier_given_identifier() {
+        let mut tokenizer = JackTokenizer::new("name");
+        tokenizer.advance();
+        assert_eq!("name", tokenizer.identifier());
+    }
+
+    #[test]
+    fn test_int_val_given_int_const() {
+        let mut tokenizer = JackTokenizer::new("123");
+        tokenizer.advance();
+        assert_eq!(123, tokenizer.int_val());
+    }
+
+    #[test]
+    fn test_string_val_given_string_const() {
+        let mut tokenizer = JackTokenizer::new("\"test string\"");
+        tokenizer.advance();
+        assert_eq!("test string", tokenizer.string_val());
     }
 }
